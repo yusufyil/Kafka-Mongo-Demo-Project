@@ -23,7 +23,7 @@ public class QuoteProducerApplication {
                     .build();
             //Quote saved = quoteRepository.save(quote);
             //System.out.println(quoteRepository.findById(saved.getId()));
-            kafkaTemplate.send("quotes", "Hello Kafka");
+            kafkaTemplate.send("quotes", "Message from Spring Boot Kafka Producer second test");
             Thread.sleep(4000);
             System.out.println("Message sent");
         };
