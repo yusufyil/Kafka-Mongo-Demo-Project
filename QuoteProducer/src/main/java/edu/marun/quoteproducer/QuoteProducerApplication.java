@@ -2,11 +2,18 @@ package edu.marun.quoteproducer;
 
 import edu.marun.quoteproducer.model.Quote;
 import edu.marun.quoteproducer.repository.QuoteRepository;
+import edu.marun.quoteproducer.service.QuoteService;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.kafka.core.KafkaTemplate;
+
+import java.util.Random;
 
 @SpringBootApplication
 public class QuoteProducerApplication {
@@ -16,17 +23,16 @@ public class QuoteProducerApplication {
     }
 
     @Bean
-    CommandLineRunner runner(QuoteRepository quoteRepository, KafkaTemplate<String, String> kafkaTemplate) {
+    CommandLineRunner runner(QuoteRepository quoteRepository, KafkaTemplate<String, String> kafkaTemplate, QuoteService quoteService) {
         return args -> {
-            Quote quote = Quote.builder()
-                    .quote("The best way to predict the future is to create it.")
-                    .build();
-            //Quote saved = quoteRepository.save(quote);
-            //System.out.println(quoteRepository.findById(saved.getId()));
-            kafkaTemplate.send("quotes", "Message from Spring Boot Kafka Producer second test");
-            Thread.sleep(4000);
-            System.out.println("Message sent");
+            while (true){
+                Quote quote = Quote.builder()
+                        .quote(quoteService.getQuote())
+                        .build();
+                quoteRepository.save(quote);
+                kafkaTemplate.send("quotes", quoteService.getQuote());
+                Thread.sleep(10_000);
+            }
         };
     }
-
 }
