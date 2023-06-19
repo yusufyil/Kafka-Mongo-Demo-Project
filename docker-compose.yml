@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mongodb:
     image: mongo
-    container_name: my-mongodb
+    #container_name: my-mongodb
     restart: always
     ports:
       - 27017:27017
@@ -14,6 +14,9 @@ services:
       - MONGO_INITDB_ROOT_PASSWORD=admin123
       - MONGO_INITDB_AUTH_MECHANISM=SCRAM-SHA-256
       - MONGO_INITDB_DATABASE=admin
+    networks:
+      - spring-backend
+
   mongo-express:
     image: mongo-express
     restart: always
@@ -23,6 +26,8 @@ services:
       ME_CONFIG_MONGODB_ADMINUSERNAME: admin
       ME_CONFIG_MONGODB_ADMINPASSWORD: admin123
       ME_CONFIG_MONGODB_URL: mongodb://admin:admin123@mongodb:27017/
+    networks:
+      - spring-backend
 
   zookeeper:
     image: confluentinc/cp-zookeeper
@@ -31,6 +36,8 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     ports:
       - 22181:2181
+    networks:
+      - spring-backend
 
   kafka:
     image: confluentinc/cp-kafka
@@ -45,3 +52,40 @@ services:
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    networks:
+      - spring-backend
+
+  producer:
+    build: ./QuoteProducer
+    restart: always
+    depends_on:
+      - kafka
+      - mongodb
+
+  consumer1:
+    build: ./QuoteConsumer
+    restart: always
+    depends_on:
+      - kafka
+      - producer
+      - mongodb
+
+  consumer2:
+    build: ./QuoteConsumer
+    restart: always
+    depends_on:
+      - kafka
+      - producer
+      - mongodb
+
+  consumer3:
+    build: ./QuoteConsumer
+    restart: always
+    depends_on:
+      - kafka
+      - producer
+      - mongodb
+
+networks:
+  spring-backend:
+    driver: bridge
